@@ -98,7 +98,7 @@ def estimate_theta(the_model, eval_loader, model_eval_loader, n_eposides_valid, 
 # train function - single class
 def train_mnet(the_model, args, train_loader, valid_loader, \
                irt_train_loader, irt_eval_loader, the_device,\
-              model_path = '.', model_name = 'model.pth'):
+              model_path = '.', model_name = 'model.pth', theta_subsample_size=100):
 
     print(the_model)
     print(the_model.encoder)
@@ -135,13 +135,12 @@ def train_mnet(the_model, args, train_loader, valid_loader, \
         print(f"Initial learning rate: {optimizer.state_dict()['param_groups'][0]['lr']}")
 
     # Start training
-    model_eval_data = irt_eval_loader.batch_generator_without_theta()
+    model_train_data = irt_train_loader.batch_generator_without_theta(subsample_size=theta_subsample_size)
     cur_theta = 0
     
     for i in range(args.epochs):
 
-        cur_theta = estimate_theta(the_model, train_loader, 
-                                   , 25, the_device)
+        cur_theta = estimate_theta(the_model, train_loader, model_train_data, 25, the_device)
         history['theta'].append(cur_theta)
         
         print("epoch: {0}, theta: {1}".format(i, cur_theta))
@@ -291,7 +290,7 @@ def train_mnet(the_model, args, train_loader, valid_loader, \
 
 def train_mnet_allClasses(args, train_loaders, valid_loaders, \
                           irt_train_loaders, irt_eval_loaders, \
-                          the_device, model_path = '.'):
+                          the_device, model_path = '.', theta_subsample_size=100):
 
 
   # extract the names
@@ -368,7 +367,7 @@ def train_mnet_allClasses(args, train_loaders, valid_loaders, \
                               irt_eval_loader = irt_eval_loaders[cur_name],
                               the_device=the_device,
                               model_path= model_path,
-                              model_name = cur_name + '.pth')
+                              model_name = cur_name + '.pth', theta_subsample_size=theta_subsample_size)
     historys[cur_name] = cur_history
     if args.verbose:
       print(f'\n{cur_name} model training finish.\n')
@@ -385,7 +384,7 @@ def train(model_path, device,
           config = {}, 
           sample_path ='.',
           irt_path ='../data/IRT',
-          train_data_path ='../data/train_bert_emb'):
+          train_data_path ='../data/train_bert_emb', theta_subsample_size=100):
 
   torch.autograd.set_detect_anomaly(True)
 
@@ -524,7 +523,7 @@ def train(model_path, device,
                                           irt_train_loaders = irt_train_loaders,
                                           irt_eval_loaders = irt_eval_loaders,
                                           the_device=device,
-                                          model_path=model_path)
+                                          model_path=model_path, theta_subsample_size=theta_subsample_size)
   
   print("\n========training result ===========\n")
   result = []

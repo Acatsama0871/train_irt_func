@@ -43,35 +43,31 @@ class IRTDataset(Dataset):
 class CL_dff_loader:
     
     def __init__(self, data_df, batch_size):
-        
         # attributes
         self.batch_size = batch_size
         self.data_df = data_df
         
 
     def batch_generator_with_theta(self, theta):
-        
         # find (diff < theta) ids
         id_subset = self.data_df[self.data_df["diff"] <= theta]
-        
+
         if len(id_subset) < self.batch_size:
             raise NoSample
-            return None
-            
-        else:
-        
-            # get dataset and dataloader
-            irt_dataset = IRTDataset(id_subset)
-        
-            return IRTDataLoader(irt_dataset, batch_size = self.batch_size, shuffle=True )
-
-
-    def batch_generator_without_theta(self):
-
         # get dataset and dataloader
-        irt_dataset = IRTDataset(self.data_df)
+        irt_dataset = IRTDataset(id_subset)
+
+        return IRTDataLoader(irt_dataset, batch_size = self.batch_size, shuffle=True)
+
+
+    def batch_generator_without_theta(self, subsample_size=-1):
+        if subsample_size == -1:
+            # get dataset and dataloader
+            irt_dataset = IRTDataset(self.data_df)
+        else:
+            irt_dataset = IRTDataset(self.data_df.sample(subsample_size))
         
-        return IRTDataLoader(irt_dataset, batch_size = self.batch_size, shuffle=True )
+        return IRTDataLoader(irt_dataset, batch_size = self.batch_size, shuffle=True)
 
 
 class NoSample(Exception):
